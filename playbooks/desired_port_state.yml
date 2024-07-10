@@ -29,10 +29,10 @@
      success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
     retries: 2
     delay: 5
-    register: assert 
+    register: check
 
   - debug:
-      msg: "{{ assert }}"
+      msg: "{{ check }}"
 
 
 
