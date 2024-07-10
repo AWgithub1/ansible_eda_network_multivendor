@@ -44,7 +44,7 @@
         state: new
         impact: high
         urgency: high
-        description: "{{inventory_hostname}} {{ interface }} is line protocol down ######## {{ int_state.stdout_lines }} ######## {{ running.stdout_lines }}"
+        description: "{{inventory_hostname}} ######## {{ int_state.stdout_lines }} ######## Running Config {{ running.stdout_lines }}"
         short_description: "{{inventory_hostname}} {{ interface }} is line protocol down"
       register: snow_var
       delegate_to: localhost
