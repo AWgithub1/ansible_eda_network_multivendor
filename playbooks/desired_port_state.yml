@@ -19,4 +19,4 @@
 
   - name: Print Event Info
     ansible.builtin.debug:
-      var: int_state.stdout_lines[0]
+      var: int_state.stdout_lines
