@@ -28,7 +28,13 @@
             - "'line protocol is up' in int_state['stdout']"
         fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
         success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
-    rescue:  
+    rescue: 
+    - name: Collect running config for {{ inventory_hostname }} {{ interface }} 
+      ansible.netcommon.cli_command:
+         command: show run interface {{ interface }}
+      register: running
+
+
     - name: Create SNOW ticket for {{ inventory_hostname }} {{ interface }}
       servicenow.itsm.incident:
         instance:
@@ -38,7 +44,7 @@
         state: new
         impact: high
         urgency: high
-        description: "{{inventory_hostname}} {{ interface }} is line protocol down ######## {{ int_state.stdout_lines }}"
+        description: "{{inventory_hostname}} {{ interface }} is line protocol down ######## {{ int_state.stdout_lines }} ######## {{ running.stdout_lines }}"
         short_description: "{{inventory_hostname}} {{ interface }} is line protocol down"
       register: snow_var
       delegate_to: localhost
