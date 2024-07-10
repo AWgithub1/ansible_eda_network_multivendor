@@ -24,10 +24,10 @@
   - name: Assert that {{ inventory_hostname }} {{ interface }} is UP
     block:
     - ansible.builtin.assert:
-      that: 
-          - "'line protocol is up' in int_state['stdout']"
-      fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
-      success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
+        that: 
+            - "'line protocol is up' in int_state['stdout']"
+        fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
+        success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
     rescue:  
     - debug:
         msg: "failed"
