@@ -29,9 +29,29 @@
         fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
         success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
     rescue:  
-    - debug:
-        msg: "failed"
+    - name: Create SNOW ticket for {{ inventory_hostname }} {{ interface }}
+      servicenow.itsm.incident:
+        instance:
+          host: "{{ SN_HOST }}"
+          username: "{{ SN_USERNAME }}"
+          password: "{{ SN_PASSWORD }}"
+        state: new
+        impact: high
+        urgency: high
+        description: "{{inventory_hostname}} {{ interface }} @ {{ current_time }} is line protocol down ######## {{ int_state.stdout_lines }}"
+        short_description: "{{inventory_hostname}} {{ interface }} @ {{ current_time }} is line protocol down"
+      register: snow_var
+      delegate_to: localhost
       
+    - name: Show incident number
+      ansible.builtin.debug:
+        msg: 
+        - "{{ snow_var.record.number }}"
+      delegate_to: localhost
+
+
+
+        
 
 
 
