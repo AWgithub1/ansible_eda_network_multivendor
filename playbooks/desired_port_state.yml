@@ -14,7 +14,7 @@
     
   - name: Check Interface State for {{ inventory_hostname }} {{ interface }}
     ansible.netcommon.cli_command:
-      command: show ip interface brief {{ interface }}
+      command: show ip interface {{ interface }}
     register: int_state
 
   - name: Print Event Info
@@ -24,9 +24,9 @@
   - name: Assert that {{ inventory_hostname }} {{ interface }} is UP
     ansible.builtin.assert:
      that: 
-        - "'FULL/' in ospf['stdout'][0]"
-     fail_msg: "OSPF neighbor is not present"
-     success_msg: "OSPF Neighbor is Full"
+        - "'line protocol is up' in int_state['stdout'][0]"
+     fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
+     success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
     retries: 3
     delay: 10
 
