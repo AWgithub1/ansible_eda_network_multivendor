@@ -31,7 +31,7 @@
 
   - debug:
       msg: "{{ check }}"
-    when: check.evaluated_to is false
+    when: evaluated_to is false
 
 
 
