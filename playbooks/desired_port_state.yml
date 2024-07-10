@@ -46,6 +46,7 @@
     - name: Show incident number
       ansible.builtin.debug:
         msg: 
+        - "{{ SN_HOST }}"
         - "{{ snow_var.record.number }}"
       delegate_to: localhost
 
