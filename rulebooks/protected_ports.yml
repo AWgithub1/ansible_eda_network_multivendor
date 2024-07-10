@@ -7,7 +7,7 @@
         port: 9092
         group_id:
   rules:
-    - name: Retrieve Data and Launch Job-template
+    - name: Retrieve Data from GRPC Dial-out and Launch Job-template
       condition: events.body.fields.new_state == "interface-notif-state-down" and events.body.fields.if_name in vars.protected
       action:
         run_job_template:
@@ -17,4 +17,16 @@
             extra_vars:
               interface: "{{ event.body.fields.if_name }}"
               rtr: "{{ event.body.fields.host_name }}"
+
+    - name: Retrieve Data from GNMI Dial-in and Launch Job-template
+      condition: events.body.fields.oper_status == "DOWN" and events.body.tags.name in vars.protected
+      action:
+        run_job_template:
+          name: "EDA-Protected-Ports"
+          organization: "Default"
+          job_args:
+            extra_vars:
+              interface: "{{ event.body.tags.name }}"
+              rtr: "{{ event.body.tags.source }}"
+
 
