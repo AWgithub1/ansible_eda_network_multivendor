@@ -47,6 +47,7 @@
             state: new
             impact: high
             urgency: high
+            caller: admin
             description: "{{inventory_hostname}} ######## {{ int_state.stdout_lines }} ######## Running Config {{ running.stdout_lines }}"
             short_description: "{{inventory_hostname}} {{ interface }} @time {{ current_time }} is line protocol down"
           register: snow_var
