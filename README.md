@@ -28,3 +28,5 @@ ansible-rulebook relies on a few components. These components all come together 
 
 Currently, there are a number of source plugins however this list is being developed and as more partners get involved in the project the list will expand.
 ![rulebook](images/rulebook.png)
+
+![table](images/table.png)
