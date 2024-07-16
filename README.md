@@ -27,4 +27,4 @@ ansible-rulebook relies on a few components. These components all come together 
 * Action - Lastly, the action is the response once the condition has been met from the event source. This can be to trigger remediation, log a ticket for observation, or generate other events which would need responding to.
 
 Currently, there are a number of source plugins however this list is being developed and as more partners get involved in the project the list will expand.
-![rulebook](/https://github.com/andubiel/ansible_eda_network_multivendor/blob/main/images/rulebook.png)
+![rulebook](images/rulebook.png)
