@@ -32,13 +32,115 @@ Currently, there are a number of source plugins however this list is being devel
 ![table](images/table.png)
 
 ## Demo Rulebook
-The rule book tells us that we are listening to a Kafka topic
-The event we are looking for is a "Down" status coming from the Json in the event.
-Lastly, if the event condition matches then we will trigger a playbook called desired_port_state.yml
+The rule book tells us that we are listening to a Kafka topic.
+
+Source Plugin:
+~~~
+ sources:
+    - ansible.eda.kafka:
+        topic: telegraf
+        host: ip-172-16-213-105.us-east-2.compute.internal
+        port: 9092
+        group_id:
+~~~
+
+The event we are looking for is a "Down" interface status coming from the Json in the event. Notably, we are using a list called protected ports to only act on specific ports that are down. We have two rules to evaulate GRPC or GNMI data payloads.
+Rules:
+~~~
+rules:
+    - name: Retrieve Data from GRPC Dial-out and Launch Job-template
+      condition: events.body.fields.new_state == "interface-notif-state-down" and events.body.fields.if_name in vars.protected
+    - name: Retrieve Data from GNMI Dial-in and Launch Job-template
+      condition: events.body.fields.oper_status == "DOWN" and events.body.tags.name in vars.protected
+~~~
+Lastly we have actions to launch a job-template to run the desired_port_state.yml playbook with specific data passed as extra-variables from firing the rulebook.
+
+~~~
+      action:
+        run_job_template:
+          name: "EDA-Protected-Ports"
+          organization: "Default"
+          job_args:
+            extra_vars:
+              interface: "{{ event.body.fields.if_name }}"
+              rtr: "{{ event.body.fields.host_name }}"
+
+      action:
+        run_job_template:
+          name: "EDA-Protected-Ports"
+          organization: "Default"
+          job_args:
+            extra_vars:
+              interface: "{{ event.body.tags.name }}"
+              rtr: "{{ event.body.tags.source }}"
+~~~
 
 ## Demo Playbook
 When ansible-rulebook works with a playbook, the event data is available to the playbook with the use of ansible_eda.event. Now, let's exit the current rulebook and lets take a look at the playbook desired_port_state.yml
 
-This playbook could be expanded, so let's first change which hosts would run the playbook. Remember we want to isolate the host and only really run remediation on the problematic host. To do this we will access event data in the playbook. Let's change the hosts target in the playbook to
+~~~
+---
+- name: Triage Down Interfaces
+  hosts: "{{ rtr }}"
+  gather_facts: False
+  tasks:
+   
+    - name: Grab Current Time
+      set_fact: current_time="{{ lookup('pipe','date +%Y-%m-%d\ %H:%M:%S') }}"
+
+    - name: Attempt a No shut for {{ inventory_hostname }} {{ interface }}
+      ansible.netcommon.network_resource:
+        os_name: "{{ ansible_network_os }}"
+        name: interfaces
+        config:
+          - name: "{{ interface }}"
+            enabled: True
+        state: merged
+
+    - name: Check Interface State for {{ inventory_hostname }} {{ interface }}
+      ansible.netcommon.cli_command:
+        command: show ip interface {{ interface }}
+      register: int_state
+
+    - name: Print Event Info
+      ansible.builtin.debug:
+        var: int_state.stdout_lines
+
+    - name: Assert that {{ inventory_hostname }} {{ interface }} is UP
+      block:
+        - ansible.builtin.assert:
+            that:
+              - "'line protocol is up' in int_state['stdout']"
+            fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
+            success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
+      rescue:
+        - name: Collect running config for {{ inventory_hostname }} {{ interface }}
+          ansible.netcommon.cli_command:
+            command: show run interface {{ interface }}
+          register: running
+
+        - name: Create SNOW ticket for {{ inventory_hostname }} {{ interface }}
+          servicenow.itsm.incident:
+            instance:
+              host: "{{ SN_HOST }}"
+              username: "{{ SN_USERNAME }}"
+              password: "{{ SN_PASSWORD }}"
+            state: new
+            impact: high
+            urgency: high
+            caller: admin
+            description: "{{inventory_hostname}} ######## {{ int_state.stdout_lines }} ######## Running Config {{ running.stdout_lines }}"
+            short_description: "{{inventory_hostname}} {{ interface }} @time {{ current_time }} is line protocol down"
+          register: snow_var
+          delegate_to: localhost
+
+        - name: Show incident number
+          ansible.builtin.debug:
+            msg:
+              - "{{ SN_HOST }}"
+              - "{{ snow_var.record.number }}"
+          delegate_to: localhost
+~~~
+
 
 
