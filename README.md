@@ -10,7 +10,9 @@ Optional Event-Driven CLI Ansible install:
 Please note this code is the developer tech preview.
 https://github.com/ansible/event-driven-ansible
 
-EDA Controller GUI is part of a normal AAP install
+EDA Controller GUI is part of a normal AAP install.
+Try AAP for free: https://www.redhat.com/en/technologies/management/ansible/try-it
+Developer License: https://developers.redhat.com/products/ansible/overview
 
 Telegraf Collector Install
 https://docs.influxdata.com/telegraf/v1.21/introduction/installation/
@@ -78,6 +80,7 @@ Lastly we have actions to launch a job-template to run the desired_port_state.ym
 ## Demo Playbook
 When ansible-rulebook works with a playbook, the event data is available to the playbook with the use of ansible_eda.event. Now, let's exit the current rulebook and lets take a look at the playbook desired_port_state.yml
 
+The extra-variables from the rulebook action define `rtr`. Also note that the job-template used to manage this playbook requires prompt for extra-variables to be checked.
 ~~~
 ---
 - name: Triage Down Interfaces
@@ -87,7 +90,9 @@ When ansible-rulebook works with a playbook, the event data is available to the 
    
     - name: Grab Current Time
       set_fact: current_time="{{ lookup('pipe','date +%Y-%m-%d\ %H:%M:%S') }}"
-
+~~~      
+The ansible.netcommon.network_resources module selects the appropriate interfaces resource module based on the os_name provided from the inventory group_vars. In other words this task is multi-vendor. Thie ansible.netcommon.cli_command module is simular but implicitly searches the ansible_network_os to run common CLI commands.
+~~~
     - name: Attempt a No shut for {{ inventory_hostname }} {{ interface }}
       ansible.netcommon.network_resource:
         os_name: "{{ ansible_network_os }}"
@@ -105,7 +110,9 @@ When ansible-rulebook works with a playbook, the event data is available to the 
     - name: Print Event Info
       ansible.builtin.debug:
         var: int_state.stdout_lines
-
+~~~
+Below we run an aserrtion in a Block to allow for a rescue condition. If the interface is in a line protocol down state further action (open an incident) is required. The Service Now task will pass all triaged data collected above as part of the description for the netwrk operator to review.  
+~~~
     - name: Assert that {{ inventory_hostname }} {{ interface }} is UP
       block:
         - ansible.builtin.assert:
