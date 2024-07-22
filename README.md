@@ -47,7 +47,8 @@ Source Plugin:
 ~~~
 
 The event we are looking for is a "Down" interface status coming from the Json in the event. Notably, we are using a list called protected ports to only act on specific ports that are down. We have two rules to evaulate GRPC or GNMI data payloads.
-Rules:
+
+### Rules:
 ~~~
 rules:
     - name: Retrieve Data from GRPC Dial-out and Launch Job-template
@@ -57,6 +58,7 @@ rules:
 ~~~
 Lastly we have actions to launch a job-template to run the desired_port_state.yml playbook with specific data passed as extra-variables from firing the rulebook.
 
+#### Actions
 ~~~
       action:
         run_job_template:
@@ -90,7 +92,9 @@ The extra-variables from the rulebook action define `rtr`. Also note that the jo
    
     - name: Grab Current Time
       set_fact: current_time="{{ lookup('pipe','date +%Y-%m-%d\ %H:%M:%S') }}"
-~~~      
+~~~ 
+
+#### Netcommon     
 The ansible.netcommon.network_resources module selects the appropriate interfaces resource module based on the os_name provided from the inventory group_vars. In other words this task is multi-vendor. Thie ansible.netcommon.cli_command module is simular but implicitly searches the ansible_network_os to run common CLI commands.
 ~~~
     - name: Attempt a No shut for {{ inventory_hostname }} {{ interface }}
@@ -111,7 +115,9 @@ The ansible.netcommon.network_resources module selects the appropriate interface
       ansible.builtin.debug:
         var: int_state.stdout_lines
 ~~~
-Below we run an aserrtion in a Block to allow for a rescue condition. If the interface is in a line protocol down state further action (open an incident) is required. The Service Now task will pass all triaged data collected above as part of the description for the netwrk operator to review.  
+
+#### Assert
+Below we run an assertion in a Block to allow for a rescue condition. If the interface is in a line protocol down state further action (open an incident) is required. The Service Now task will pass all triaged data collected above as part of the description for the netwrk operator to review.  
 ~~~
     - name: Assert that {{ inventory_hostname }} {{ interface }} is UP
       block:
