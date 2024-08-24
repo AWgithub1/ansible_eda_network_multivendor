@@ -9,7 +9,8 @@
 
     - name: Attempt a No shut for {{ inventory_hostname }} {{ interface }}
       ansible.netcommon.network_resource:
-        os_name: "{{ ansible_network_os }}"
+        #os_name: "{{ ansible_network_os }}"
+        os_name: RhelOS
         name: interfaces
         config:
           - name: "{{ interface }}"
