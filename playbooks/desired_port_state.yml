@@ -1,45 +1,45 @@
 ---
 - name: Triage Down Interfaces
   hosts: webstack
-  gather_facts: False
+  gather_facts: True
   tasks:
    
     - name: Grab Current Time
       set_fact: current_time="{{ lookup('pipe','date +%Y-%m-%d\ %H:%M:%S') }}"
 
-    - name: Attempt a No shut for {{ inventory_hostname }} {{ interface }}
+    - name: Attempt a No shut for node3.awrng.local ens160
       ansible.netcommon.network_resource:
         #os_name: "{{ ansible_network_os }}"
         os_name: RhelOS
         name: interfaces
         config:
-          - name: "{{ interface }}"
+          - name: "ens160"
             enabled: True
         state: merged
 
-    - name: Check Interface State for {{ inventory_hostname }} {{ interface }}
+    - name: Check Interface State for node3.awrng.local ens160
       ansible.netcommon.cli_command:
-        command: show ip interface {{ interface }}
+        command: show ip interface ens160
       register: int_state
 
     - name: Print Event Info
       ansible.builtin.debug:
         var: int_state.stdout_lines
 
-    - name: Assert that {{ inventory_hostname }} {{ interface }} is UP
+    - name: Assert that node3.awrng.local ens160 is UP
       block:
         - ansible.builtin.assert:
             that:
               - "'line protocol is up' in int_state['stdout']"
-            fail_msg: "{{ inventory_hostname }} {{ interface }} line protocol is down"
-            success_msg: "{{ inventory_hostname }} {{ interface }} line protocol is up"
+            fail_msg: "node3.awrng.local ens160 line protocol is down"
+            success_msg: "node3.awrng.local ens160 line protocol is up"
       rescue:
-        - name: Collect running config for {{ inventory_hostname }} {{ interface }}
+        - name: Collect running config for node3.awrng.local ens160
           ansible.netcommon.cli_command:
-            command: show run interface {{ interface }}
+            command: show run interface ens160
           register: running
 
-        - name: Create SNOW ticket for {{ inventory_hostname }} {{ interface }}
+        - name: Create SNOW ticket for node3.awrng.local ens160
           servicenow.itsm.incident:
             instance:
               host: "{{ SN_HOST }}"
@@ -49,8 +49,8 @@
             impact: high
             urgency: high
             caller: admin
-            description: "{{inventory_hostname}} ######## {{ int_state.stdout_lines }} ######## Running Config {{ running.stdout_lines }}"
-            short_description: "{{inventory_hostname}} {{ interface }} @time {{ current_time }} is line protocol down"
+            description: "node3.awrng.local ######## {{ int_state.stdout_lines }} ######## Running Config {{ running.stdout_lines }}"
+            short_description: "node3.awrng.local ens160 @time {{ current_time }} is line protocol down"
           register: snow_var
           delegate_to: localhost
 
