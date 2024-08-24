@@ -1,6 +1,6 @@
 ---
 - name: Triage Down Interfaces
-  hosts: node3.awrng.local
+  hosts: webstack
   gather_facts: False
   tasks:
    
